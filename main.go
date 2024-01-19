@@ -2,10 +2,10 @@ package main
 
 import (
 	"github.com/astaxie/beego/plugins/cors"
+	_ "github.com/udistrital/sga_mid_practicas_academicas/routers"
 	apistatus "github.com/udistrital/utils_oas/apiStatusLib"
 	"github.com/udistrital/utils_oas/auditoria"
 	"github.com/udistrital/utils_oas/xray"
-	_ "sga_mid_practicas_academicas/routers"
 
 	"github.com/astaxie/beego"
 )
