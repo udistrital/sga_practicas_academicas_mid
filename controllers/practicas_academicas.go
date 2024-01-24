@@ -654,7 +654,7 @@ func (c *PracticasAcademicasController) Put() {
 // @Param	id		id perteneciente a terceros
 // @Success 200 {object} models.Practicas_academicas
 // @Failure 404 not found resource
-// @router /consultar_solicitante/:id [get]
+// @router /solicitantes/:id [get]
 func (c *PracticasAcademicasController) ConsultarInfoSolicitante() {
 	idTercero := c.Ctx.Input.Param(":id")
 
@@ -884,7 +884,7 @@ func (c *PracticasAcademicasController) ConsultarInfoSolicitante() {
 // @Param	id		documento de identidad del usuario registrado en wso2
 // @Success 200 {object} models.Practicas_academicas
 // @Failure 404 not found resource
-// @router /consultar_colaborador/:id [get]
+// @router /colaboradores/:id [get]
 func (c *PracticasAcademicasController) ConsultarInfoColaborador() {
 	idStr := c.Ctx.Input.Param(":id")
 	var resultado = make(map[string]interface{})
@@ -1143,7 +1143,7 @@ func (c *PracticasAcademicasController) ConsultarInfoColaborador() {
 // @Description get parametros para creación de practica academica
 // @Success 200 {object} models.Practicas_academicas
 // @Failure 404 not found resource
-// @router /consultar_parametros/ [get]
+// @router /parametros [get]
 func (c *PracticasAcademicasController) ConsultarParametros() {
 	var getProyecto []map[string]interface{}
 	var proyectos []map[string]interface{}
@@ -1227,7 +1227,7 @@ func (c *PracticasAcademicasController) ConsultarParametros() {
 // @Description get estados de practica academica
 // @Success 200 {object} models.Practicas_academicas
 // @Failure 404 not found resource
-// @router /consultar_espacios_academicos/:id [get]
+// @router /:id/espacios-academicos [get]
 func (c *PracticasAcademicasController) ConsultarEspaciosAcademicos() {
 	resultado := []interface{}{}
 	var espaciosAcademicos map[string]interface{}
@@ -1264,7 +1264,7 @@ func (c *PracticasAcademicasController) ConsultarEspaciosAcademicos() {
 // @Param	body		body 	models.Practicas_academicas	true		"body for Practicas_academicas content"
 // @Success 201 {object} models.Practicas_academicas
 // @Failure 400 the request contains incorrect syntaxis
-// @router /enviar_invitacion/ [post]
+// @router /invitaciones [post]
 func (c *PracticasAcademicasController) EnviarInvitaciones() {
 
 	var Solicitudes []map[string]interface{}
