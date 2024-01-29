@@ -1348,10 +1348,10 @@ func (c *PracticasAcademicasController) EnviarInvitaciones() {
 	}
 
 	if !errorGetAll {
-		c.Ctx.Output.Status(200)
+		c.Ctx.Output.SetStatus(200)
 		c.Data["json"] = requestresponse.APIResponseDTO(true, 200, alerta)
 	} else {
-		c.Ctx.Output.Status(400)
+		c.Ctx.Output.SetStatus(400)
 		c.Data["json"] = requestresponse.APIResponseDTO(false, 400, nil)
 	}
 
