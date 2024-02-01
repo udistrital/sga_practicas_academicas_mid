@@ -9,6 +9,7 @@ import (
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/logs"
 	"github.com/udistrital/sga_mid_practicas_academicas/models"
+	"github.com/udistrital/sga_mid_practicas_academicas/services"
 	"github.com/udistrital/utils_oas/request"
 	"github.com/udistrital/utils_oas/time_bogota"
 )
@@ -893,9 +894,14 @@ func (c *PracticasAcademicasController) ConsultarInfoColaborador() {
 	alertas := []interface{}{}
 	var errorGetAll bool
 
-	errPersona := request.GetJson("http://"+beego.AppConfig.String("TercerosService")+"datos_identificacion?query=Numero:"+idStr, &persona)
+	fmt.Println("IDENTIFICADOR", idStr)
+	fmt.Println("URL", "http://"+beego.AppConfig.String("TercerosService")+"datos_identificacion?query=Numero:1233906484")
+	//errPersona := request.GetJson("http://"+beego.AppConfig.String("TercerosService")+"datos_identificacion?query=Numero:"+idStr, &persona)
+	errPersona := request.GetJson("http://"+beego.AppConfig.String("TercerosService")+"datos_identificacion?query=Numero:1233906484", &persona)
 	if errPersona == nil && fmt.Sprintf("%v", persona[0]) != "map[]" {
+		fmt.Println("ENTROOOOOOOOOOOOOO 1")
 		if persona[0]["Status"] != 404 {
+			fmt.Println("ENTROOOOOOOOOOOOOO 2")
 			var tipoVinculacion []map[string]interface{}
 			var correoElectronico []map[string]interface{}
 			var correoInstitucional []map[string]interface{}
@@ -914,9 +920,12 @@ func (c *PracticasAcademicasController) ConsultarInfoColaborador() {
 			// TIEMPO COMPLETO OCASIONAL 	296
 			// MEDIO TIEMPO OCASIONAL 	298
 			// HORA CÁTEDRA POR HONORARIOS 	299
+			fmt.Println("URL", "http://"+beego.AppConfig.String("TercerosService")+"vinculacion?query=TerceroPrincipalId:"+fmt.Sprintf("%v", idTercero)+",Activo:true&limit=0")
 			errVinculacion := request.GetJson("http://"+beego.AppConfig.String("TercerosService")+"vinculacion?query=TerceroPrincipalId:"+fmt.Sprintf("%v", idTercero)+",Activo:true&limit=0", &tipoVinculacion)
 			if errVinculacion == nil && fmt.Sprintf("%v", tipoVinculacion[0]) != "map[]" {
+				fmt.Println("ENTROOOOOOOOOOOOOO 3")
 				if tipoVinculacion[0]["Status"] != 404 {
+					fmt.Println("ENTROOOOOOOOOOOOOO 4")
 
 					for _, tv := range tipoVinculacion {
 						if fmt.Sprintf("%v", tv["TipoVinculacionId"]) == "292" ||
@@ -927,7 +936,9 @@ func (c *PracticasAcademicasController) ConsultarInfoColaborador() {
 							fmt.Sprintf("%v", tv["TipoVinculacionId"]) == "297" ||
 							fmt.Sprintf("%v", tv["TipoVinculacionId"]) == "298" ||
 							fmt.Sprintf("%v", tv["TipoVinculacionId"]) == "299" {
+							fmt.Println("ENTROOOOOOOOOOOOOO 5")
 							var vinculacion map[string]interface{}
+							//fmt.Println("URL", "http://"+beego.AppConfig.String("ParametroService")+"parametro?query=Id:"+fmt.Sprintf("%v", tv["TipoVinculacionId"])+",Activo:true&limit=0")
 							errVinculacion := request.GetJson("http://"+beego.AppConfig.String("ParametroService")+"parametro?query=Id:"+fmt.Sprintf("%v", tv["TipoVinculacionId"])+",Activo:true&limit=0", &vinculacion)
 							if errVinculacion == nil && fmt.Sprintf("%v", vinculacion["Data"]) != "[map[]]" {
 								if vinculacion["Status"] != 404 {
@@ -1086,6 +1097,7 @@ func (c *PracticasAcademicasController) ConsultarInfoColaborador() {
 							resultado["PuedeBorrar"] = true
 							break
 						} else {
+							fmt.Println("NOOOOOOOOO ERROOOOOOR 5")
 							logs.Error("No es docente")
 							c.Data["json"] = map[string]interface{}{"Success": false, "Status": "404", "Message": "Data not found", "Data": nil}
 						}
@@ -1093,6 +1105,7 @@ func (c *PracticasAcademicasController) ConsultarInfoColaborador() {
 					}
 
 				} else {
+					fmt.Println("NOOOOOOOOO ERROOOOOOR 4")
 					if tipoVinculacion[0]["Message"] == "Not found resource" {
 						c.Data["json"] = nil
 					} else {
@@ -1105,6 +1118,7 @@ func (c *PracticasAcademicasController) ConsultarInfoColaborador() {
 					}
 				}
 			} else {
+				fmt.Println("NOOOOOOOOO ERROOOOOOR 3")
 				alertas = append(alertas, "No data found")
 				alerta.Code = "400"
 				alerta.Type = "error"
@@ -1114,6 +1128,7 @@ func (c *PracticasAcademicasController) ConsultarInfoColaborador() {
 			}
 
 		} else {
+			fmt.Println("NOOOOOOOOO ERROOOOOOR 2")
 			if persona[0]["Message"] == "Not found resource" {
 				c.Data["json"] = nil
 			} else {
@@ -1126,6 +1141,7 @@ func (c *PracticasAcademicasController) ConsultarInfoColaborador() {
 			}
 		}
 	} else {
+		fmt.Println("NOOOOOOOOO ERROOOOOOR 1")
 		logs.Error(errPersona)
 		errorGetAll = true
 		c.Data["json"] = map[string]interface{}{"Success": false, "Status": "404", "Message": "Data not found", "Data": nil}
@@ -1235,7 +1251,8 @@ func (c *PracticasAcademicasController) ConsultarEspaciosAcademicos() {
 
 	errEspaciosAcademicos := request.GetJson("http://"+beego.AppConfig.String("EspaciosAcademicosService")+"espacio-academico?query=activo:true,docente_id:"+fmt.Sprintf("%v", idStr), &espaciosAcademicos)
 	if errEspaciosAcademicos == nil && fmt.Sprintf("%v", espaciosAcademicos["Data"]) != "[map[]]" {
-		if espaciosAcademicos["Status"] != "404" {
+		services.AsignarResultadoEspaciosAcademicos(&resultado, espaciosAcademicos)
+		/*if espaciosAcademicos["Status"] != "404" {
 
 			for _, espacioAcademico := range espaciosAcademicos["Data"].([]interface{}) {
 
@@ -1244,7 +1261,7 @@ func (c *PracticasAcademicasController) ConsultarEspaciosAcademicos() {
 					"Id":     espacioAcademico.(map[string]interface{})["_id"],
 				})
 			}
-		}
+		}*/
 	} else {
 		resultado = nil
 		logs.Error(espaciosAcademicos)
