@@ -1184,7 +1184,8 @@ func (c *PracticasAcademicasController) ConsultarParametros() {
 
 	errProyecto := request.GetJson("http://"+beego.AppConfig.String("ProyectoAcademicoService")+"proyecto_academico_institucion/?query=Activo:true,Oferta:true&limit=0", &getProyecto)
 	if errProyecto == nil {
-		for _, proyectoAux := range getProyecto {
+		services.ManejoProyectosParametros(&resultado, &getProyecto, proyectos)
+		/*for _, proyectoAux := range getProyecto {
 			proyecto := map[string]interface{}{
 				"Id":          proyectoAux["Id"],
 				"Nombre":      proyectoAux["Nombre"],
@@ -1193,7 +1194,7 @@ func (c *PracticasAcademicasController) ConsultarParametros() {
 			}
 			proyectos = append(proyectos, proyecto)
 		}
-		resultado["proyectos"] = proyectos
+		resultado["proyectos"] = proyectos*/
 	} else {
 		resultado["proyectos"] = nil
 		logs.Error(getProyecto)
@@ -1219,12 +1220,13 @@ func (c *PracticasAcademicasController) ConsultarParametros() {
 
 		errTipoEstados := request.GetJson("http://"+beego.AppConfig.String("SolicitudDocenteService")+"estado_tipo_solicitud?query=TipoSolicitud.Id:"+id, &tipoEstados)
 		if errTipoEstados == nil && fmt.Sprintf("%v", tipoEstados["Data"]) != "[map[]]" {
-			if tipoEstados["Status"] != "404" {
+			services.ManejoEstadosParametros(&resultado, tipoEstados, estados)
+			/*if tipoEstados["Status"] != "404" {
 				for _, estado := range tipoEstados["Data"].([]interface{}) {
 					estados = append(estados, estado.(map[string]interface{})["EstadoId"])
 					resultado["estados"] = estados
 				}
-			}
+			}*/
 		} else {
 			logs.Error(tipoEstados)
 			c.Data["system"] = errTipoEstados
