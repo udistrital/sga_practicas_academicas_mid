@@ -1,6 +1,36 @@
 package services
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/astaxie/beego"
+	"github.com/udistrital/sga_mid_practicas_academicas/models"
+	"github.com/udistrital/utils_oas/request"
+)
+
+// FUNCIONES QUE SE USAN EN CONSULTAR INFO SOLICITANTE
+
+func ManejoVinculacionSolicitante(resultado *map[string]interface{}, tipoVinculacion []map[string]interface{}) {
+	for _, tv := range tipoVinculacion {
+		if fmt.Sprintf("%v", tv["TipoVinculacionId"]) == "292" ||
+			fmt.Sprintf("%v", tv["TipoVinculacionId"]) == "293" ||
+			fmt.Sprintf("%v", tv["TipoVinculacionId"]) == "294" ||
+			fmt.Sprintf("%v", tv["TipoVinculacionId"]) == "295" ||
+			fmt.Sprintf("%v", tv["TipoVinculacionId"]) == "296" ||
+			fmt.Sprintf("%v", tv["TipoVinculacionId"]) == "297" ||
+			fmt.Sprintf("%v", tv["TipoVinculacionId"]) == "298" ||
+			fmt.Sprintf("%v", tv["TipoVinculacionId"]) == "299" {
+
+			var vinculacion map[string]interface{}
+			errVinculacion := request.GetJson("http://"+beego.AppConfig.String("ParametroService")+"parametro?query=Id:"+fmt.Sprintf("%v", tv["TipoVinculacionId"])+",Activo:true&limit=0", &vinculacion)
+			if errVinculacion == nil && fmt.Sprintf("%v", vinculacion["Data"]) != "[map[]]" {
+				if vinculacion["Status"] != 404 {
+					(*resultado)["TipoVinculacionId"] = vinculacion["Data"].([]interface{})[0]
+				}
+			}
+		}
+	}
+}
 
 // FUNCIONES QUE SE USAN EN CONSULTAR PARAMETROS
 
@@ -39,4 +69,19 @@ func AsignarResultadoEspaciosAcademicos(resultado *[]interface{}, espaciosAcadem
 			})
 		}
 	}
+}
+
+// FUNCIONES QUE SE USAN EN VARIOS ENDPOINTS
+
+func ManejoError(alerta *models.Alert, alertas *[]interface{}, mensaje string, err ...error) {
+	var msj string
+	if len(err) > 0 && err[0] != nil {
+		msj = mensaje + err[0].Error()
+	} else {
+		msj = mensaje
+	}
+	*alertas = append(*alertas, msj)
+	(*alerta).Body = *alertas
+	(*alerta).Type = "error"
+	(*alerta).Code = "400"
 }

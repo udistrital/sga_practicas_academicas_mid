@@ -665,7 +665,10 @@ func (c *PracticasAcademicasController) ConsultarInfoSolicitante() {
 	alertas := []interface{}{}
 	var errorGetAll bool
 
-	errPersona := request.GetJson("http://"+beego.AppConfig.String("TercerosService")+"tercero?query=Id:"+idTercero, &persona)
+	fmt.Println("TERCERO", idTercero)
+
+	errPersona := request.GetJson("http://"+beego.AppConfig.String("TercerosService")+"tercero?query=Id:59839", &persona)
+	//errPersona := request.GetJson("http://"+beego.AppConfig.String("TercerosService")+"tercero?query=Id:"+idTercero, &persona)
 	if errPersona == nil && fmt.Sprintf("%v", persona[0]) != "map[]" {
 		var tipoVinculacion []map[string]interface{}
 		var correoElectronico []map[string]interface{}
@@ -821,7 +824,8 @@ func (c *PracticasAcademicasController) ConsultarInfoSolicitante() {
 		errVinculacion := request.GetJson("http://"+beego.AppConfig.String("TercerosService")+"vinculacion?query=TerceroPrincipalId:"+fmt.Sprintf("%v", idTercero)+",Activo:true&limit=0", &tipoVinculacion)
 		if errVinculacion == nil && fmt.Sprintf("%v", tipoVinculacion[0]) != "map[]" {
 			if tipoVinculacion[0]["Status"] != 404 {
-				for _, tv := range tipoVinculacion {
+				services.ManejoVinculacionSolicitante(&resultado, tipoVinculacion)
+				/*for _, tv := range tipoVinculacion {
 					if fmt.Sprintf("%v", tv["TipoVinculacionId"]) == "292" ||
 						fmt.Sprintf("%v", tv["TipoVinculacionId"]) == "293" ||
 						fmt.Sprintf("%v", tv["TipoVinculacionId"]) == "294" ||
@@ -839,25 +843,27 @@ func (c *PracticasAcademicasController) ConsultarInfoSolicitante() {
 							}
 						}
 					}
-				}
+				}*/
 			} else {
 				if tipoVinculacion[0]["Message"] == "Not found resource" {
 					c.Data["json"] = nil
 				} else {
-					alertas = append(alertas, "No data found")
+					services.ManejoError(&alerta, &alertas, "No data found")
+					/*alertas = append(alertas, "No data found")
 					alerta.Code = "404"
 					alerta.Type = "error"
-					alerta.Body = alertas
+					alerta.Body = alertas*/
 					errorGetAll = true
 					c.Data["json"] = map[string]interface{}{"Response": alerta}
 				}
 			}
 		} else {
-			alertas = append(alertas, "No data found")
-			errorGetAll = true
+			services.ManejoError(&alerta, &alertas, "No data found")
+			/*alertas = append(alertas, "No data found")
 			alerta.Code = "400"
 			alerta.Body = alertas
-			alerta.Type = "error"
+			alerta.Type = "error"*/
+			errorGetAll = true
 			c.Data["json"] = map[string]interface{}{"Response": alerta}
 		}
 
