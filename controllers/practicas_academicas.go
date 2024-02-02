@@ -297,17 +297,7 @@ func (c *PracticasAcademicasController) GetAll() {
 
 	if errSolicitud == nil {
 		if Solicitudes != nil && fmt.Sprintf("%v", Solicitudes[0]) != "map[]" {
-			for _, solicitud := range Solicitudes {
-				errTipoEstado := request.GetJson("http://"+beego.AppConfig.String("SolicitudDocenteService")+"estado_tipo_solicitud?query=Id:"+fmt.Sprintf("%v", solicitud["SolicitudId"].(map[string]interface{})["EstadoTipoSolicitudId"].(map[string]interface{})["Id"]), &TipoEstado)
-
-				if errTipoEstado == nil {
-					resultado = append(resultado, map[string]interface{}{
-						"Id":                    solicitud["SolicitudId"].(map[string]interface{})["Id"],
-						"FechaRadicacion":       solicitud["SolicitudId"].(map[string]interface{})["FechaRadicacion"],
-						"EstadoTipoSolicitudId": TipoEstado["Data"].([]interface{})[0],
-					})
-				}
-			}
+			services.ManejoSolicitudesGetAll(Solicitudes, TipoEstado, &resultado)
 		} else {
 			errorGetAll = true
 			// c.Data["message"] = "Error service GetAll: No data found"

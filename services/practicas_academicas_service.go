@@ -56,6 +56,22 @@ func ManejoSolicitudesGetOne(Solicitudes []map[string]interface{}, id_practica s
 	ManejoEstadosGetOne(id_practica, Estados, Comentario, resultado)
 }
 
+// FUNCIONES QUE SE USAN EN GETALL
+
+func ManejoSolicitudesGetAll(Solicitudes []map[string]interface{}, TipoEstado map[string]interface{}, resultado *[]interface{}) {
+	for _, solicitud := range Solicitudes {
+		errTipoEstado := request.GetJson("http://"+beego.AppConfig.String("SolicitudDocenteService")+"estado_tipo_solicitud?query=Id:"+fmt.Sprintf("%v", solicitud["SolicitudId"].(map[string]interface{})["EstadoTipoSolicitudId"].(map[string]interface{})["Id"]), &TipoEstado)
+
+		if errTipoEstado == nil {
+			*resultado = append(*resultado, map[string]interface{}{
+				"Id":                    solicitud["SolicitudId"].(map[string]interface{})["Id"],
+				"FechaRadicacion":       solicitud["SolicitudId"].(map[string]interface{})["FechaRadicacion"],
+				"EstadoTipoSolicitudId": TipoEstado["Data"].([]interface{})[0],
+			})
+		}
+	}
+}
+
 // FUNCIONES QUE SE USAN EN CONSULTAR INFO SOLICITANTE
 
 func ManejoVinculacionSolicitante(resultado *map[string]interface{}, tipoVinculacion []map[string]interface{}) {
