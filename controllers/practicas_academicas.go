@@ -243,42 +243,7 @@ func (c *PracticasAcademicasController) GetOne() {
 	errSolicitud := request.GetJson("http://"+beego.AppConfig.String("SolicitudDocenteService")+"solicitante?query=SolicitudId.Id:"+id_practica, &Solicitudes)
 	if errSolicitud == nil {
 		if Solicitudes != nil && fmt.Sprintf("%v", Solicitudes[0]) != "map[]" {
-			Referencia := Solicitudes[0]["SolicitudId"].(map[string]interface{})["Referencia"].(string)
-			fechaRadicado := Solicitudes[0]["SolicitudId"].(map[string]interface{})["FechaRadicacion"].(string)
-			var ReferenciaJson map[string]interface{}
-			if err := json.Unmarshal([]byte(Referencia), &ReferenciaJson); err == nil {
-				ReferenciaJson["Id"] = id_practica
-				resultado = ReferenciaJson
-				resultado["FechaRadicado"] = fechaRadicado
-			}
-
-			idEstado := fmt.Sprintf("%v", Solicitudes[0]["SolicitudId"].(map[string]interface{})["EstadoTipoSolicitudId"].(map[string]interface{})["Id"].(float64))
-
-			errTipoSolicitud := request.GetJson("http://"+beego.AppConfig.String("SolicitudDocenteService")+"estado_tipo_solicitud?query=Activo:true,Id:"+idEstado, &tipoSolicitud)
-			if errTipoSolicitud == nil {
-				if tipoSolicitud != nil && fmt.Sprintf("%v", tipoSolicitud["Data"].([]interface{})[0]) != "map[]" {
-					resultado["EstadoTipoSolicitudId"] = tipoSolicitud["Data"].([]interface{})[0]
-				}
-			}
-
-			errEstados := request.GetJson("http://"+beego.AppConfig.String("SolicitudDocenteService")+"solicitud_evolucion_estado?query=SolicitudId.Id:"+id_practica, &Estados)
-			if errEstados == nil {
-				if Estados != nil && fmt.Sprintf("%v", Estados[0]) != "map[]" {
-					for _, v := range Estados {
-
-						errComentario := request.GetJson("http://"+beego.AppConfig.String("SolicitudDocenteService")+"observacion?query=titulo:"+fmt.Sprintf("%v", v["Id"]), &Comentario)
-						if errComentario == nil {
-							if Comentario != nil && fmt.Sprintf("%v", Comentario[0]) != "map[]" {
-								v["Comentario"] = Comentario[0]["Valor"]
-							} else {
-								v["Comentario"] = ""
-							}
-						}
-					}
-					resultado["Estados"] = Estados
-				}
-			}
-
+			services.ManejoSolicitudesGetOne(Solicitudes, id_practica, &resultado, tipoSolicitud, Estados, Comentario)
 		} else {
 			errorGetAll = true
 			c.Data["message"] = "Error service GetAll: No data found"

@@ -1,12 +1,60 @@
 package services
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/astaxie/beego"
 	"github.com/udistrital/sga_mid_practicas_academicas/models"
 	"github.com/udistrital/utils_oas/request"
 )
+
+// FUNCIONES QUE SE USAN EN GETONE
+
+func SolicitudTipoGetOne(Solicitudes []map[string]interface{}, tipoSolicitud map[string]interface{}, resultado *map[string]interface{}) {
+	idEstado := fmt.Sprintf("%v", Solicitudes[0]["SolicitudId"].(map[string]interface{})["EstadoTipoSolicitudId"].(map[string]interface{})["Id"].(float64))
+
+	errTipoSolicitud := request.GetJson("http://"+beego.AppConfig.String("SolicitudDocenteService")+"estado_tipo_solicitud?query=Activo:true,Id:"+idEstado, &tipoSolicitud)
+	if errTipoSolicitud == nil {
+		if tipoSolicitud != nil && fmt.Sprintf("%v", tipoSolicitud["Data"].([]interface{})[0]) != "map[]" {
+			(*resultado)["EstadoTipoSolicitudId"] = tipoSolicitud["Data"].([]interface{})[0]
+		}
+	}
+}
+
+func ManejoEstadosGetOne(id_practica string, Estados []map[string]interface{}, Comentario []map[string]interface{}, resultado *map[string]interface{}) {
+	errEstados := request.GetJson("http://"+beego.AppConfig.String("SolicitudDocenteService")+"solicitud_evolucion_estado?query=SolicitudId.Id:"+id_practica, &Estados)
+	if errEstados == nil {
+		if Estados != nil && fmt.Sprintf("%v", Estados[0]) != "map[]" {
+			for _, v := range Estados {
+
+				errComentario := request.GetJson("http://"+beego.AppConfig.String("SolicitudDocenteService")+"observacion?query=titulo:"+fmt.Sprintf("%v", v["Id"]), &Comentario)
+				if errComentario == nil {
+					if Comentario != nil && fmt.Sprintf("%v", Comentario[0]) != "map[]" {
+						v["Comentario"] = Comentario[0]["Valor"]
+					} else {
+						v["Comentario"] = ""
+					}
+				}
+			}
+			(*resultado)["Estados"] = Estados
+		}
+	}
+}
+
+func ManejoSolicitudesGetOne(Solicitudes []map[string]interface{}, id_practica string, resultado *map[string]interface{}, tipoSolicitud map[string]interface{}, Estados []map[string]interface{}, Comentario []map[string]interface{}) {
+	Referencia := Solicitudes[0]["SolicitudId"].(map[string]interface{})["Referencia"].(string)
+	fechaRadicado := Solicitudes[0]["SolicitudId"].(map[string]interface{})["FechaRadicacion"].(string)
+	var ReferenciaJson map[string]interface{}
+	if err := json.Unmarshal([]byte(Referencia), &ReferenciaJson); err == nil {
+		ReferenciaJson["Id"] = id_practica
+		*resultado = ReferenciaJson
+		(*resultado)["FechaRadicado"] = fechaRadicado
+	}
+
+	SolicitudTipoGetOne(Solicitudes, tipoSolicitud, resultado)
+	ManejoEstadosGetOne(id_practica, Estados, Comentario, resultado)
+}
 
 // FUNCIONES QUE SE USAN EN CONSULTAR INFO SOLICITANTE
 
