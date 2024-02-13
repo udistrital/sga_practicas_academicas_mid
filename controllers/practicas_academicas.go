@@ -3,13 +3,16 @@ package controllers
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/astaxie/beego"
-	"github.com/astaxie/beego/logs"
-	"github.com/udistrital/utils_oas/request"
-	"github.com/udistrital/utils_oas/time_bogota"
-	"sga_mid_practicas_academicas/models"
 	"strconv"
 	"strings"
+
+	"github.com/astaxie/beego"
+	"github.com/astaxie/beego/logs"
+	"github.com/udistrital/sga_mid_practicas_academicas/models"
+	"github.com/udistrital/utils_oas/request"
+	"github.com/udistrital/utils_oas/time_bogota"
+	"github.com/udistrital/utils_oas/errorhandler"
+	"github.com/udistrital/utils_oas/requestresponse"
 )
 
 // PracticasAcademicasController operations for Practicas_academicas
@@ -38,6 +41,7 @@ func (c *PracticasAcademicasController) URLMapping() {
 // @Failure 400 the request contains incorrect syntaxis
 // @router / [post]
 func (c *PracticasAcademicasController) Post() {
+	defer errorhandler.HandlePanic(&c.Controller)
 
 	var solicitud map[string]interface{}
 	var resDocs []interface{}
@@ -47,9 +51,10 @@ func (c *PracticasAcademicasController) Post() {
 	var SolicitudEvolucionEstadoPost map[string]interface{}
 	var IdEstadoTipoSolicitud int
 	resultado := make(map[string]interface{})
-	var alerta models.Alert
 	var errorGetAll bool
-	alertas := []interface{}{}
+	var statusCode int
+	var message string
+
 
 	if err := json.Unmarshal(c.Ctx.Input.RequestBody, &solicitud); err == nil {
 		for i := range solicitud["Documentos"].([]interface{}) {
@@ -148,75 +153,54 @@ func (c *PracticasAcademicasController) Post() {
 								resultado["Solicitante"] = SolicitantePost["Data"]
 							} else {
 								errorGetAll = true
-								alertas = append(alertas, "No data found")
-								alerta.Code = "404"
-								alerta.Type = "error"
-								alerta.Body = alertas
-								c.Data["json"] = map[string]interface{}{"Response": alerta}
+								message += "No data found"
+								statusCode = 404
 							}
 						} else {
 							var resultado2 map[string]interface{}
 							request.SendJson("http://"+beego.AppConfig.String("SolicitudDocenteService")+"solicitud/"+fmt.Sprintf("%v", IdSolicitud), "DELETE", &resultado2, nil)
 							request.SendJson("http://"+beego.AppConfig.String("SolicitudDocenteService")+"solicitante/"+fmt.Sprintf("%v", SolicitantePost["Id"]), "DELETE", &resultado2, nil)
 							errorGetAll = true
-							alertas = append(alertas, errSolicitante.Error())
-							alerta.Code = "400"
-							alerta.Type = "error"
-							alerta.Body = alertas
-							c.Data["json"] = map[string]interface{}{"Response": alerta}
+							message += errSolicitante.Error()
+							statusCode = 400
 						}
 					} else {
 						errorGetAll = true
-						alertas = append(alertas, "No data found")
-						alerta.Code = "404"
-						alerta.Type = "error"
-						alerta.Body = alertas
-						c.Data["json"] = map[string]interface{}{"Response": alerta}
+						message = "No data found"
+						statusCode = 404
 					}
 				} else {
 					//Se elimina el registro de solicitud si no se puede hacer el POST a la tabla solicitante
 					var resultado2 map[string]interface{}
 					request.SendJson("http://"+beego.AppConfig.String("SolicitudDocenteService")+"solicitud/"+fmt.Sprintf("%v", IdSolicitud), "DELETE", &resultado2, nil)
 					errorGetAll = true
-					alertas = append(alertas, errSolicitante.Error())
-					alerta.Code = "400"
-					alerta.Type = "error"
-					alerta.Body = alertas
-					c.Data["json"] = map[string]interface{}{"Response": alerta}
+					message += errSolicitante.Error()
+					statusCode = 400
 				}
 			} else {
 				errorGetAll = true
-				alertas = append(alertas, "No data found")
-				alerta.Code = "404"
-				alerta.Type = "error"
-				// alerta.Body = alertas
-				alerta.Body = SolicitudPracticas
-				c.Data["json"] = map[string]interface{}{"Response": alerta}
+				message +=  "No data found"
+				statusCode = 404
 			}
 		} else {
 			errorGetAll = true
-			alertas = append(alertas, errSolicitud.Error())
-			alerta.Code = "400"
-			alerta.Type = "error"
-			alerta.Body = alertas
-			c.Data["json"] = map[string]interface{}{"Response": alerta}
+			message +=  errSolicitud.Error()
+			statusCode = 400
 		}
 
 	} else {
 		errorGetAll = true
-		alertas = append(alertas, err.Error())
-		alerta.Code = "400"
-		alerta.Type = "error"
-		alerta.Body = alertas
-		c.Data["json"] = map[string]interface{}{"Response": alerta}
+		message +=  err.Error()
+		statusCode = 400
 	}
 
+
 	if !errorGetAll {
-		alertas = append(alertas, resultado)
-		alerta.Code = "200"
-		alerta.Type = "OK"
-		alerta.Body = alertas
-		c.Data["json"] = map[string]interface{}{"Response": alerta}
+		c.Ctx.Output.SetStatus(200)
+		c.Data["json"] = requestresponse.APIResponseDTO(true, 200, resultado)
+	} else {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = requestresponse.APIResponseDTO(false, statusCode, nil, message)
 	}
 
 	c.ServeJSON()
@@ -230,6 +214,8 @@ func (c *PracticasAcademicasController) Post() {
 // @Failure 404 not found resource
 // @router /:id [get]
 func (c *PracticasAcademicasController) GetOne() {
+	defer errorhandler.HandlePanic(&c.Controller)
+
 	id_practica := c.Ctx.Input.Param(":id")
 	var Solicitudes []map[string]interface{}
 	var tipoSolicitud map[string]interface{}
@@ -237,6 +223,8 @@ func (c *PracticasAcademicasController) GetOne() {
 	var Comentario []map[string]interface{}
 	resultado := make(map[string]interface{})
 	var errorGetAll bool
+	var message string
+	var statusCode int
 
 	errSolicitud := request.GetJson("http://"+beego.AppConfig.String("SolicitudDocenteService")+"solicitante?query=SolicitudId.Id:"+id_practica, &Solicitudes)
 	if errSolicitud == nil {
@@ -279,18 +267,24 @@ func (c *PracticasAcademicasController) GetOne() {
 
 		} else {
 			errorGetAll = true
-			c.Data["message"] = "Error service GetAll: No data found"
+			message = "Error service GetAll: No data found"
+			statusCode = 404
+			c.Data["json"] = requestresponse.APIResponseDTO(false, 404, nil, message)
 			c.Abort("404")
 		}
 	} else {
 		errorGetAll = true
-		c.Data["message"] = "Error service GetAll: " + errSolicitud.Error()
+		message = "Error service GetAll: " + errSolicitud.Error()
+		statusCode = 400
+		c.Data["json"] = requestresponse.APIResponseDTO(false, 404, nil, message)
 		c.Abort("400")
 	}
 
 	if !errorGetAll {
-		c.Data["json"] = map[string]interface{}{"Success": true, "Status": "200", "Message": "Request successful", "Data": resultado}
-
+		c.Data["json"] = requestresponse.APIResponseDTO(true, 200, resultado)
+	} else {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = requestresponse.APIResponseDTO(false, statusCode, nil, message)
 	}
 
 	c.ServeJSON()
@@ -301,64 +295,73 @@ func (c *PracticasAcademicasController) GetOne() {
 // @Description get Practicas_academicas
 // @Param	query	query	string	false	"Filter. e.g. col1:v1,col2:v2 ..."
 // @Param	fields	query	string	false	"Fields returned. e.g. col1,col2 ..."
-// @Param	sortby	query	string	false	"Sorted-by fields. e.g. col1,col2 ..."
-// @Param	order	query	string	false	"Order corresponding to each sortby field, if single value, apply to all sortby fields. e.g. desc,asc ..."
-// @Param	limit	query	string	false	"Limit the size of result set. Must be an integer"
-// @Param	offset	query	string	false	"Start position of result set. Must be an integer"
 // @Success 200 {object} models.Practicas_academicas
 // @Failure 404 not data found
 // @Failure 400 the request contains incorrect syntax
 // @router / [get]
 func (c *PracticasAcademicasController) GetAll() {
-	var query string
-	var fields string
-	var Solicitudes []map[string]interface{}
-	var TipoEstado map[string]interface{}
-	resultado := []interface{}{}
-	var errorGetAll bool
+	defer errorhandler.HandlePanic(&c.Controller)
 
-	// query: k:v,k:v
-	if query = c.GetString("query"); query != "" {
-		query = "&query=" + query
-	}
-	// fields: col1,col2,entity.col3
-	if fields = c.GetString("fields"); fields != "" {
-		fields = "&fields=" + fields
-	}
+	query, fields := c.GetString("query"), c.GetString("fields")
+    if query != "" {
+        query = "&query=" + query
+    }
+    if fields != "" {
+        fields = "&fields=" + fields
+    }
 
-	errSolicitud := request.GetJson("http://"+beego.AppConfig.String("SolicitudDocenteService")+"solicitante?limit=0"+query+"&fields=SolicitudId", &Solicitudes)
+    var solicitudes []map[string]interface{}
+    errSolicitud := request.GetJson("http://"+beego.AppConfig.String("SolicitudDocenteService")+"solicitante?limit=0"+query+"&fields=SolicitudId", &solicitudes)
+    if errSolicitud != nil {
+        c.Data["json"] = requestresponse.APIResponseDTO(false, 400, nil, "Message: Error service GetAll -> "+errSolicitud.Error())
+        c.ServeJSON()
+        return
+    }
 
-	if errSolicitud == nil {
-		if Solicitudes != nil && fmt.Sprintf("%v", Solicitudes[0]) != "map[]" {
-			for _, solicitud := range Solicitudes {
-				errTipoEstado := request.GetJson("http://"+beego.AppConfig.String("SolicitudDocenteService")+"estado_tipo_solicitud?query=Id:"+fmt.Sprintf("%v", solicitud["SolicitudId"].(map[string]interface{})["EstadoTipoSolicitudId"].(map[string]interface{})["Id"]), &TipoEstado)
+    if len(solicitudes) == 0 {
+        c.Data["json"] = requestresponse.APIResponseDTO(false, 404, nil, "Error service GetAll: No data found")
+        c.ServeJSON()
+        return
+    }
 
-				if errTipoEstado == nil {
-					resultado = append(resultado, map[string]interface{}{
-						"Id":                    solicitud["SolicitudId"].(map[string]interface{})["Id"],
-						"FechaRadicacion":       solicitud["SolicitudId"].(map[string]interface{})["FechaRadicacion"],
-						"EstadoTipoSolicitudId": TipoEstado["Data"].([]interface{})[0],
-					})
-				}
-			}
-		} else {
-			errorGetAll = true
-			// c.Data["message"] = "Error service GetAll: No data found"
-			c.Data["json"] = map[string]interface{}{"Success": true, "Status": "404", "Message": "Error service GetAll: No data found", "Data": nil}
-			// c.Abort("404")
+    resultado := []interface{}{}
+    for _, solicitud := range solicitudes {
+        solicitudID, ok := solicitud["SolicitudId"].(map[string]interface{})
+        if !ok {
+            continue
+        }
+
+        estadoTipoSolicitudID, ok := solicitudID["EstadoTipoSolicitudId"].(map[string]interface{})
+        if !ok {
+            continue
+        }
+
+        var tipoEstado map[string]interface{}
+        errTipoEstado := request.GetJson("http://"+beego.AppConfig.String("SolicitudDocenteService")+"estado_tipo_solicitud?query=Id:"+fmt.Sprintf("%v", estadoTipoSolicitudID["Id"]), &tipoEstado)
+        if errTipoEstado != nil {
+            continue
+        }
+
+        nuevoElemento := map[string]interface{}{
+			"Id":                    solicitudID["Id"],
+			"FechaRadicacion":       solicitudID["FechaRadicacion"],
+			"EstadoTipoSolicitudId": tipoEstado["Data"].([]interface{})[0],
 		}
-	} else {
-		errorGetAll = true
-		// c.Data["message"] = "Error service GetAll: " + errSolicitud.Error()
-		c.Data["json"] = map[string]interface{}{"Success": true, "Status": "400", "Message": "Error service GetAll: " + errSolicitud.Error(), "Data": nil}
-		// c.Abort("400")
-	}
+	
+		resultado = append(resultado, nuevoElemento)
+	
+		// Imprimir el nuevo elemento añadido para depuración
+		fmt.Println("Nuevo elemento añadido:", nuevoElemento["Id"])
+    }
 
-	if !errorGetAll {
-		c.Data["json"] = map[string]interface{}{"Success": true, "Status": "200", "Message": "Request successful", "Data": resultado}
-	}
-
-	c.ServeJSON()
+    if len(resultado) > 0 {
+		c.Ctx.Output.SetStatus(200)
+        c.Data["json"] = requestresponse.APIResponseDTO(true, 200, resultado)
+    } else {
+		c.Ctx.Output.SetStatus(404)
+        c.Data["json"] = requestresponse.APIResponseDTO(false, 404, nil, "No data found after processing")
+    }
+    c.ServeJSON()
 }
 
 // Put ...
@@ -370,6 +373,8 @@ func (c *PracticasAcademicasController) GetAll() {
 // @Failure 403 :id is not int
 // @router /:id [put]
 func (c *PracticasAcademicasController) Put() {
+	defer errorhandler.HandlePanic(&c.Controller)
+
 	id_practica := c.Ctx.Input.Param(":id")
 	var RespuestaSolicitud map[string]interface{}
 	var Solicitud map[string]interface{}
@@ -384,9 +389,9 @@ func (c *PracticasAcademicasController) Put() {
 	var Referencia string
 	var resDocs []interface{}
 	var resultado = make(map[string]interface{})
-	var alerta models.Alert
 	var errorGetAll bool
-	alertas := []interface{}{}
+	var statusCode int
+	var message string
 
 	if err := json.Unmarshal(c.Ctx.Input.RequestBody, &RespuestaSolicitud); err == nil {
 
@@ -541,108 +546,81 @@ func (c *PracticasAcademicasController) Put() {
 															resultado = SolicitudPut
 														} else {
 															errorGetAll = true
-															alertas = append(alertas, SolicitudPut["Message"])
-															alerta.Code = "400"
-															alerta.Type = "error"
-															alerta.Body = alertas
-															c.Data["json"] = map[string]interface{}{"Response": alerta}
+															statusCode = 400
 														}
 													} else {
 														errorGetAll = true
-														alertas = append(alertas, errPutEstado)
-														alerta.Code = "400"
-														alerta.Type = "error"
-														alerta.Body = alertas
-														c.Data["json"] = map[string]interface{}{"Response": alerta}
+														message = errPutEstado.Error()
+														statusCode = 400
 													}
 												}
 											} else {
 												errorGetAll = true
-												alertas = append(alertas, "No data found")
-												alerta.Code = "404"
-												alerta.Type = "error"
-												alerta.Body = alertas
-												c.Data["json"] = map[string]interface{}{"Response": alerta}
+												message = "No data found"
+												statusCode = 404
 											}
 										} else {
 											errorGetAll = true
-											alertas = append(alertas, errSolicitudEvolucionEstado)
-											alerta.Code = "400"
-											alerta.Type = "error"
-											alerta.Body = alertas
-											c.Data["json"] = map[string]interface{}{"Response": alerta}
+											message = errSolicitudEvolucionEstado.Error()
+											statusCode = 400
 										}
 									} else {
 										errorGetAll = true
-										alertas = append(alertas, "No data found")
-										alerta.Code = "404"
-										alerta.Type = "error"
-										alerta.Body = alertas
-										c.Data["json"] = map[string]interface{}{"Response": alerta}
+										message =  "No data found"
+										statusCode = 404
 									}
 								}
 
 							} else {
 								errorGetAll = true
-								alertas = append(alertas, errSolicitudEvolucionEstado.Error())
-								alerta.Code = "400"
-								alerta.Type = "error"
-								alerta.Body = alertas
-								c.Data["json"] = map[string]interface{}{"Response": alerta}
+								message = errSolicitudEvolucionEstado.Error()
+								statusCode = 400
 							}
 
 						} else {
 							errorGetAll = true
-							alertas = append(alertas, "No data found")
-							alerta.Code = "404"
-							alerta.Type = "error"
-							alerta.Body = alertas
-							c.Data["json"] = map[string]interface{}{"Response": alerta}
+							message = "No data found"
+							statusCode = 404
 						}
 
 					} else {
 						errorGetAll = true
-						c.Data["message"] = "Error service GetAll: No data found"
-						c.Abort("404")
+						message = "Error service GetAll: No data found"
+						statusCode = 404
 					}
 
 				} else {
 					errorGetAll = true
-					c.Data["message"] = "Error service GetAll: No data found"
-					c.Abort("404")
+					message = "Error service GetAll: No data found"
+					statusCode = 404
 				}
 
 			} else {
 				errorGetAll = true
-				c.Data["message"] = "Error service GetAll: No data found"
-				c.Abort("404")
+				message = "Error service GetAll: No data found"
+				statusCode = 404
 			}
 
 		} else {
 			errorGetAll = true
-			alertas = append(alertas, errSolicitud.Error())
-			alerta.Code = "400"
-			alerta.Type = "error"
-			alerta.Body = alertas
-			c.Data["json"] = map[string]interface{}{"Response": alerta}
+			message = errSolicitud.Error()
+			statusCode = 400
 		}
 
 	} else {
 		errorGetAll = true
-		alertas = append(alertas, err.Error())
-		alerta.Code = "400"
-		alerta.Type = "error"
-		alerta.Body = alertas
-		c.Data["json"] = map[string]interface{}{"Response": alerta}
+		message = err.Error()
+		statusCode = 400
 	}
 
 	if !errorGetAll {
-		alertas = append(alertas, resultado)
-		alerta.Code = "200"
-		alerta.Type = "OK"
-		alerta.Body = alertas
-		c.Data["json"] = map[string]interface{}{"Response": alerta}
+		c.Ctx.Output.SetStatus(200)
+		c.Data["json"] = requestresponse.APIResponseDTO(true, 200, resultado)
+	} else {
+		c.Ctx.Output.SetStatus(statusCode)
+		c.Data["json"] = requestresponse.APIResponseDTO(false, statusCode, nil, message)
 	}
+
 
 	c.ServeJSON()
 }
@@ -653,8 +631,10 @@ func (c *PracticasAcademicasController) Put() {
 // @Param	id		id perteneciente a terceros
 // @Success 200 {object} models.Practicas_academicas
 // @Failure 404 not found resource
-// @router /consultar_solicitante/:id [get]
+// @router /solicitantes/:id [get]
 func (c *PracticasAcademicasController) ConsultarInfoSolicitante() {
+	defer errorhandler.HandlePanic(&c.Controller)
+
 	idTercero := c.Ctx.Input.Param(":id")
 
 	var resultado = make(map[string]interface{})
@@ -871,8 +851,13 @@ func (c *PracticasAcademicasController) ConsultarInfoSolicitante() {
 	}
 
 	if !errorGetAll {
-		c.Data["json"] = map[string]interface{}{"Success": true, "Status": "200", "Message": "Request successful", "Data": resultado}
+		c.Ctx.Output.SetStatus(200)
+		c.Data["json"] = requestresponse.APIResponseDTO(true, 200, resultado, "Request successful")
+	} else {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = requestresponse.APIResponseDTO(false, 400, nil, "Errors occurred while processing request")
 	}
+
 
 	c.ServeJSON()
 }
@@ -883,8 +868,10 @@ func (c *PracticasAcademicasController) ConsultarInfoSolicitante() {
 // @Param	id		documento de identidad del usuario registrado en wso2
 // @Success 200 {object} models.Practicas_academicas
 // @Failure 404 not found resource
-// @router /consultar_colaborador/:id [get]
+// @router /colaboradores/:id [get]
 func (c *PracticasAcademicasController) ConsultarInfoColaborador() {
+	defer errorhandler.HandlePanic(&c.Controller)
+
 	idStr := c.Ctx.Input.Param(":id")
 	var resultado = make(map[string]interface{})
 	var persona []map[string]interface{}
@@ -1131,7 +1118,11 @@ func (c *PracticasAcademicasController) ConsultarInfoColaborador() {
 	}
 
 	if !errorGetAll {
-		c.Data["json"] = map[string]interface{}{"Success": true, "Status": "200", "Message": "Request successful", "Data": resultado}
+		c.Ctx.Output.SetStatus(200)
+		c.Data["json"] = requestresponse.APIResponseDTO(true, 200, resultado)
+	} else {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = requestresponse.APIResponseDTO(false, 400, nil)
 	}
 
 	c.ServeJSON()
@@ -1142,8 +1133,10 @@ func (c *PracticasAcademicasController) ConsultarInfoColaborador() {
 // @Description get parametros para creación de practica academica
 // @Success 200 {object} models.Practicas_academicas
 // @Failure 404 not found resource
-// @router /consultar_parametros/ [get]
+// @router /parametros [get]
 func (c *PracticasAcademicasController) ConsultarParametros() {
+	defer errorhandler.HandlePanic(&c.Controller)
+	
 	var getProyecto []map[string]interface{}
 	var proyectos []map[string]interface{}
 	var estados []interface{}
@@ -1216,7 +1209,7 @@ func (c *PracticasAcademicasController) ConsultarParametros() {
 	}
 
 	c.Ctx.Output.SetStatus(200)
-	c.Data["json"] = map[string]interface{}{"Success": true, "Status": "200", "Message": "Query successful", "Data": resultado}
+	c.Data["json"] = requestresponse.APIResponseDTO(true, 200, resultado)
 
 	c.ServeJSON()
 }
@@ -1226,8 +1219,10 @@ func (c *PracticasAcademicasController) ConsultarParametros() {
 // @Description get estados de practica academica
 // @Success 200 {object} models.Practicas_academicas
 // @Failure 404 not found resource
-// @router /consultar_espacios_academicos/:id [get]
+// @router /:id/espacios-academicos [get]
 func (c *PracticasAcademicasController) ConsultarEspaciosAcademicos() {
+	defer errorhandler.HandlePanic(&c.Controller)
+
 	resultado := []interface{}{}
 	var espaciosAcademicos map[string]interface{}
 	idStr := c.Ctx.Input.Param(":id")
@@ -1252,7 +1247,7 @@ func (c *PracticasAcademicasController) ConsultarEspaciosAcademicos() {
 	}
 
 	c.Ctx.Output.SetStatus(200)
-	c.Data["json"] = map[string]interface{}{"Success": true, "Status": "200", "Message": "Query successful", "Data": resultado}
+	c.Data["json"] = requestresponse.APIResponseDTO(true, 200, resultado)
 
 	c.ServeJSON()
 }
@@ -1263,8 +1258,9 @@ func (c *PracticasAcademicasController) ConsultarEspaciosAcademicos() {
 // @Param	body		body 	models.Practicas_academicas	true		"body for Practicas_academicas content"
 // @Success 201 {object} models.Practicas_academicas
 // @Failure 400 the request contains incorrect syntaxis
-// @router /enviar_invitacion/ [post]
+// @router /invitaciones [post]
 func (c *PracticasAcademicasController) EnviarInvitaciones() {
+	defer errorhandler.HandlePanic(&c.Controller)
 
 	var Solicitudes []map[string]interface{}
 	var CorreoPost map[string]interface{}
@@ -1352,11 +1348,11 @@ func (c *PracticasAcademicasController) EnviarInvitaciones() {
 	}
 
 	if !errorGetAll {
-		alertas = append(alertas, "Correos enviados")
-		alerta.Code = "200"
-		alerta.Type = "OK"
-		alerta.Body = alertas
-		c.Data["json"] = map[string]interface{}{"Response": alerta}
+		c.Ctx.Output.SetStatus(200)
+		c.Data["json"] = requestresponse.APIResponseDTO(true, 200, alerta)
+	} else {
+		c.Ctx.Output.SetStatus(400)
+		c.Data["json"] = requestresponse.APIResponseDTO(false, 400, nil)
 	}
 
 	c.ServeJSON()

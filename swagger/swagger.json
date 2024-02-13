@@ -15,10 +15,10 @@
     },
     "basePath": "/v1",
     "paths": {
-        "/practicas_academicas/": {
+        "/practicas-academicas/": {
             "get": {
                 "tags": [
-                    "practicas_academicas"
+                    "practicas-academicas"
                 ],
                 "description": "get Practicas_academicas",
                 "operationId": "PracticasAcademicasController.GetAll",
@@ -33,30 +33,6 @@
                         "in": "query",
                         "name": "fields",
                         "description": "Fields returned. e.g. col1,col2 ...",
-                        "type": "string"
-                    },
-                    {
-                        "in": "query",
-                        "name": "sortby",
-                        "description": "Sorted-by fields. e.g. col1,col2 ...",
-                        "type": "string"
-                    },
-                    {
-                        "in": "query",
-                        "name": "order",
-                        "description": "Order corresponding to each sortby field, if single value, apply to all sortby fields. e.g. desc,asc ...",
-                        "type": "string"
-                    },
-                    {
-                        "in": "query",
-                        "name": "limit",
-                        "description": "Limit the size of result set. Must be an integer",
-                        "type": "string"
-                    },
-                    {
-                        "in": "query",
-                        "name": "offset",
-                        "description": "Start position of result set. Must be an integer",
                         "type": "string"
                     }
                 ],
@@ -77,7 +53,7 @@
             },
             "post": {
                 "tags": [
-                    "practicas_academicas"
+                    "practicas-academicas"
                 ],
                 "description": "create Practicas_academicas",
                 "operationId": "PracticasAcademicasController.Create",
@@ -105,10 +81,10 @@
                 }
             }
         },
-        "/practicas_academicas/consultar_colaborador/{id}": {
+        "/practicas-academicas/colaboradores/{id}": {
             "get": {
                 "tags": [
-                    "practicas_academicas"
+                    "practicas-academicas"
                 ],
                 "description": "get información del docente colaborador",
                 "operationId": "PracticasAcademicasController.ConsultarInfoColaborador",
@@ -135,80 +111,10 @@
                 }
             }
         },
-        "/practicas_academicas/consultar_espacios_academicos/{id}": {
-            "get": {
-                "tags": [
-                    "practicas_academicas"
-                ],
-                "description": "get estados de practica academica",
-                "operationId": "PracticasAcademicasController.ConsultarEspaciosAcademicos",
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "schema": {
-                            "$ref": "#/definitions/models.Practicas_academicas"
-                        }
-                    },
-                    "404": {
-                        "description": "not found resource"
-                    }
-                }
-            }
-        },
-        "/practicas_academicas/consultar_parametros/": {
-            "get": {
-                "tags": [
-                    "practicas_academicas"
-                ],
-                "description": "get parametros para creación de practica academica",
-                "operationId": "PracticasAcademicasController.ConsultarParametros",
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "schema": {
-                            "$ref": "#/definitions/models.Practicas_academicas"
-                        }
-                    },
-                    "404": {
-                        "description": "not found resource"
-                    }
-                }
-            }
-        },
-        "/practicas_academicas/consultar_solicitante/{id}": {
-            "get": {
-                "tags": [
-                    "practicas_academicas"
-                ],
-                "description": "get información del docente solicitante de la practica academica",
-                "operationId": "PracticasAcademicasController.ConsultarInfoSolicitante",
-                "parameters": [
-                    {
-                        "in": "id",
-                        "name": "id",
-                        "description": "terceros",
-                        "schema": {
-                            "$ref": "#/definitions/perteneciente"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "schema": {
-                            "$ref": "#/definitions/models.Practicas_academicas"
-                        }
-                    },
-                    "404": {
-                        "description": "not found resource"
-                    }
-                }
-            }
-        },
-        "/practicas_academicas/enviar_invitacion/": {
+        "/practicas-academicas/invitaciones": {
             "post": {
                 "tags": [
-                    "practicas_academicas"
+                    "practicas-academicas"
                 ],
                 "description": "enviar invitaciones al correo de los estudiantes",
                 "operationId": "PracticasAcademicasController.EnviarInvitaciones",
@@ -236,10 +142,60 @@
                 }
             }
         },
-        "/practicas_academicas/{id}": {
+        "/practicas-academicas/parametros": {
             "get": {
                 "tags": [
-                    "practicas_academicas"
+                    "practicas-academicas"
+                ],
+                "description": "get parametros para creación de practica academica",
+                "operationId": "PracticasAcademicasController.ConsultarParametros",
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/models.Practicas_academicas"
+                        }
+                    },
+                    "404": {
+                        "description": "not found resource"
+                    }
+                }
+            }
+        },
+        "/practicas-academicas/solicitantes/{id}": {
+            "get": {
+                "tags": [
+                    "practicas-academicas"
+                ],
+                "description": "get información del docente solicitante de la practica academica",
+                "operationId": "PracticasAcademicasController.ConsultarInfoSolicitante",
+                "parameters": [
+                    {
+                        "in": "id",
+                        "name": "id",
+                        "description": "terceros",
+                        "schema": {
+                            "$ref": "#/definitions/perteneciente"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/models.Practicas_academicas"
+                        }
+                    },
+                    "404": {
+                        "description": "not found resource"
+                    }
+                }
+            }
+        },
+        "/practicas-academicas/{id}": {
+            "get": {
+                "tags": [
+                    "practicas-academicas"
                 ],
                 "description": "get Practicas_academicas by id",
                 "operationId": "PracticasAcademicasController.GetOne",
@@ -266,7 +222,7 @@
             },
             "put": {
                 "tags": [
-                    "practicas_academicas"
+                    "practicas-academicas"
                 ],
                 "description": "update the Practicas_academicas",
                 "operationId": "PracticasAcademicasController.Put",
@@ -300,6 +256,26 @@
                     }
                 }
             }
+        },
+        "/practicas-academicas/{id}/espacios-academicos": {
+            "get": {
+                "tags": [
+                    "practicas-academicas"
+                ],
+                "description": "get estados de practica academica",
+                "operationId": "PracticasAcademicasController.ConsultarEspaciosAcademicos",
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/models.Practicas_academicas"
+                        }
+                    },
+                    "404": {
+                        "description": "not found resource"
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -318,7 +294,7 @@
     },
     "tags": [
         {
-            "name": "practicas_academicas",
+            "name": "practicas-academicas",
             "description": "PracticasAcademicasController operations for Practicas_academicas\n"
         }
     ]
