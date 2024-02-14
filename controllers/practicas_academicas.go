@@ -9,6 +9,7 @@ import (
 	"github.com/astaxie/beego/logs"
 	"github.com/udistrital/sga_mid_practicas_academicas/models"
 	"github.com/udistrital/sga_mid_practicas_academicas/services"
+	"github.com/udistrital/utils_oas/errorhandler"
 	"github.com/udistrital/utils_oas/request"
 )
 
@@ -38,6 +39,8 @@ func (c *PracticasAcademicasController) URLMapping() {
 // @Failure 400 the request contains incorrect syntaxis
 // @router / [post]
 func (c *PracticasAcademicasController) Post() {
+	defer errorhandler.HandlePanic(&c.Controller)
+
 	var solicitud map[string]interface{}
 	var resDocs []interface{}
 	var Referencia string
@@ -54,13 +57,18 @@ func (c *PracticasAcademicasController) Post() {
 		services.ManejoDocumentosPost(&solicitud, &resDocs)
 		services.AsignaciónVariablesPost(&solicitud, &Referencia, resDocs, &IdEstadoTipoSolicitud)
 
-		c.Data["json"] = services.SolicitudPracticasPost(IdEstadoTipoSolicitud, Referencia, solicitud, SolicitudPost, &resultado, &SolicitantePost, &SolicitudEvolucionEstadoPost, &alerta, &alertas, &errorGetAll)
+		if respuesta := services.SolicitudPracticasPost(IdEstadoTipoSolicitud, Referencia, solicitud, SolicitudPost, &resultado, &SolicitantePost, &SolicitudEvolucionEstadoPost, &alerta, &alertas, &errorGetAll); respuesta != nil {
+			c.Ctx.Output.SetStatus(404)
+			c.Data["json"] = respuesta
+		}
 	} else {
+		c.Ctx.Output.SetStatus(404)
 		services.ManejoError(&alerta, &alertas, "", &errorGetAll, err)
 		c.Data["json"] = map[string]interface{}{"Response": alerta}
 	}
 
 	if !errorGetAll {
+		c.Ctx.Output.SetStatus(200)
 		services.ManejoExito(&alertas, &alerta, resultado)
 		c.Data["json"] = map[string]interface{}{"Response": alerta}
 	}
@@ -76,6 +84,8 @@ func (c *PracticasAcademicasController) Post() {
 // @Failure 404 not found resource
 // @router /:id [get]
 func (c *PracticasAcademicasController) GetOne() {
+	defer errorhandler.HandlePanic(&c.Controller)
+
 	id_practica := c.Ctx.Input.Param(":id")
 	var Solicitudes []map[string]interface{}
 	var tipoSolicitud map[string]interface{}
@@ -89,17 +99,20 @@ func (c *PracticasAcademicasController) GetOne() {
 		if Solicitudes != nil && fmt.Sprintf("%v", Solicitudes[0]) != "map[]" {
 			services.ManejoSolicitudesGetOne(Solicitudes, id_practica, &resultado, &tipoSolicitud, &Estados, &Comentario)
 		} else {
+			c.Ctx.Output.SetStatus(404)
 			errorGetAll = true
 			c.Data["message"] = "Error service GetAll: No data found"
 			c.Abort("404")
 		}
 	} else {
+		c.Ctx.Output.SetStatus(404)
 		errorGetAll = true
 		c.Data["message"] = "Error service GetAll: " + errSolicitud.Error()
 		c.Abort("400")
 	}
 
 	if !errorGetAll {
+		c.Ctx.Output.SetStatus(200)
 		c.Data["json"] = map[string]interface{}{"Success": true, "Status": "200", "Message": "Request successful", "Data": resultado}
 
 	}
@@ -121,6 +134,8 @@ func (c *PracticasAcademicasController) GetOne() {
 // @Failure 400 the request contains incorrect syntax
 // @router / [get]
 func (c *PracticasAcademicasController) GetAll() {
+	defer errorhandler.HandlePanic(&c.Controller)
+
 	var query string
 	var fields string
 	var Solicitudes []map[string]interface{}
@@ -137,9 +152,13 @@ func (c *PracticasAcademicasController) GetAll() {
 		fields = "&fields=" + fields
 	}
 
-	c.Data["json"] = services.SolicitudGetAllSolicitudes(query, Solicitudes, &TipoEstado, &resultado, errorGetAll)
+	if respuesta := services.SolicitudGetAllSolicitudes(query, Solicitudes, &TipoEstado, &resultado, errorGetAll); respuesta != nil {
+		c.Ctx.Output.SetStatus(404)
+		c.Data["json"] = respuesta
+	}
 
 	if !errorGetAll {
+		c.Ctx.Output.SetStatus(200)
 		c.Data["json"] = map[string]interface{}{"Success": true, "Status": "200", "Message": "Request successful", "Data": resultado}
 	}
 
@@ -155,6 +174,8 @@ func (c *PracticasAcademicasController) GetAll() {
 // @Failure 403 :id is not int
 // @router /:id [put]
 func (c *PracticasAcademicasController) Put() {
+	defer errorhandler.HandlePanic(&c.Controller)
+
 	id_practica := c.Ctx.Input.Param(":id")
 	var RespuestaSolicitud map[string]interface{}
 	var Solicitud map[string]interface{}
@@ -179,6 +200,7 @@ func (c *PracticasAcademicasController) Put() {
 		dataMessage, dataJson, exito := services.ManejoSolicitudesPut(&NuevoEstado, id_practica, RespuestaSolicitud, &SolicitudEvolucionEstadoPost, &SolicitudPut, &Solicitud, &resultado, &errorGetAll, &alertas, &alerta, &Referencia, &observacionPost, &tipoSolicitud, &anteriorEstado, &anteriorEstadoPost, &resDocs)
 
 		if !exito {
+			c.Ctx.Output.SetStatus(404)
 			if dataMessage != nil {
 				c.Data["message"] = dataMessage
 				c.Abort("404")
@@ -187,11 +209,13 @@ func (c *PracticasAcademicasController) Put() {
 			}
 		}
 	} else {
+		c.Ctx.Output.SetStatus(404)
 		services.ManejoError(&alerta, &alertas, "", &errorGetAll, err)
 		c.Data["json"] = map[string]interface{}{"Response": alerta}
 	}
 
 	if !errorGetAll {
+		c.Ctx.Output.SetStatus(200)
 		services.ManejoExito(&alertas, &alerta, resultado)
 		c.Data["json"] = map[string]interface{}{"Response": alerta}
 	}
@@ -207,6 +231,8 @@ func (c *PracticasAcademicasController) Put() {
 // @Failure 404 not found resource
 // @router /consultar_solicitante/:id [get]
 func (c *PracticasAcademicasController) ConsultarInfoSolicitante() {
+	defer errorhandler.HandlePanic(&c.Controller)
+
 	idTercero := c.Ctx.Input.Param(":id")
 
 	var resultado = make(map[string]interface{})
@@ -226,19 +252,34 @@ func (c *PracticasAcademicasController) ConsultarInfoSolicitante() {
 		var jsondata map[string]interface{}
 
 		// Correo institucional --> 94
-		c.Data["json"] = services.SolicitudCorreoInstitucionalConsultarInfo(idTercero, &correoInstitucional, &jsondata, &resultado, &alertas, &alerta, &errorGetAll)
+		if respuestaCI := services.SolicitudCorreoInstitucionalConsultarInfo(idTercero, &correoInstitucional, &jsondata, &resultado, &alertas, &alerta, &errorGetAll); respuestaCI != nil {
+			c.Ctx.Output.SetStatus(404)
+			c.Data["json"] = respuestaCI
+		}
 
 		// Correo --> 53
-		c.Data["json"] = services.SolicitudCorreoConsultarInfo(idTercero, &correoElectronico, &jsondata, &resultado, &alertas, &alerta, &errorGetAll)
+		if respuestaC := services.SolicitudCorreoConsultarInfo(idTercero, &correoElectronico, &jsondata, &resultado, &alertas, &alerta, &errorGetAll); respuestaC != nil {
+			c.Ctx.Output.SetStatus(404)
+			c.Data["json"] = respuestaC
+		}
 
 		// Correo personal --> 253
-		c.Data["json"] = services.SolicitudCorreoPersonalConsultarInfo(idTercero, &correoPersonal, &jsondata, &resultado, &alertas, &alerta, &errorGetAll)
+		if respuestaCP := services.SolicitudCorreoPersonalConsultarInfo(idTercero, &correoPersonal, &jsondata, &resultado, &alertas, &alerta, &errorGetAll); respuestaCP != nil {
+			c.Ctx.Output.SetStatus(404)
+			c.Data["json"] = respuestaCP
+		}
 
 		// Teléfono --> 51
-		c.Data["json"] = services.SolicitudTelefonoConsultarInfo(idTercero, &telefono, &jsondata, &resultado, &alertas, &alerta, &errorGetAll)
+		if respuestaT := services.SolicitudTelefonoConsultarInfo(idTercero, &telefono, &jsondata, &resultado, &alertas, &alerta, &errorGetAll); respuestaT != nil {
+			c.Ctx.Output.SetStatus(404)
+			c.Data["json"] = respuestaT
+		}
 
 		// Celular --> 52
-		c.Data["json"] = services.SolicitudCelularConsultarInfo(idTercero, &celular, &jsondata, &resultado, &alertas, &alerta, &errorGetAll)
+		if respuestaCe := services.SolicitudCelularConsultarInfo(idTercero, &celular, &jsondata, &resultado, &alertas, &alerta, &errorGetAll); respuestaCe != nil {
+			c.Ctx.Output.SetStatus(404)
+			c.Data["json"] = respuestaCe
+		}
 
 		// DOCENTE DE PLANTA 	292
 		// DOCENTE DE CARRERA TIEMPO COMPLETO 	293
@@ -248,7 +289,10 @@ func (c *PracticasAcademicasController) ConsultarInfoSolicitante() {
 		// TIEMPO COMPLETO OCASIONAL 	296
 		// MEDIO TIEMPO OCASIONAL 	298
 		// HORA CÁTEDRA POR HONORARIOS 	299
-		c.Data["json"] = services.SolicitudTipoVinculacionConsultarInfo(idTercero, &tipoVinculacion, &resultado, &alertas, &alerta, &errorGetAll)
+		if respuestaV := services.SolicitudTipoVinculacionConsultarInfo(idTercero, &tipoVinculacion, &resultado, &alertas, &alerta, &errorGetAll); respuestaV != nil {
+			c.Ctx.Output.SetStatus(404)
+			c.Data["json"] = respuestaV
+		}
 
 		resultado["Nombre"] = persona[0]["NombreCompleto"]
 		resultado["Id"], _ = strconv.ParseInt(idTercero, 10, 64)
@@ -256,12 +300,14 @@ func (c *PracticasAcademicasController) ConsultarInfoSolicitante() {
 
 		c.Data["json"] = resultado
 	} else {
+		c.Ctx.Output.SetStatus(404)
 		logs.Error(errPersona)
 		errorGetAll = true
 		c.Data["json"] = map[string]interface{}{"Success": false, "Status": "404", "Message": "Data not found", "Data": nil}
 	}
 
 	if !errorGetAll {
+		c.Ctx.Output.SetStatus(200)
 		c.Data["json"] = map[string]interface{}{"Success": true, "Status": "200", "Message": "Request successful", "Data": resultado}
 	}
 
@@ -276,6 +322,8 @@ func (c *PracticasAcademicasController) ConsultarInfoSolicitante() {
 // @Failure 404 not found resource
 // @router /consultar_colaborador/:id [get]
 func (c *PracticasAcademicasController) ConsultarInfoColaborador() {
+	defer errorhandler.HandlePanic(&c.Controller)
+
 	idStr := c.Ctx.Input.Param(":id")
 	var resultado = make(map[string]interface{})
 	var persona []map[string]interface{}
@@ -304,22 +352,28 @@ func (c *PracticasAcademicasController) ConsultarInfoColaborador() {
 			// TIEMPO COMPLETO OCASIONAL 	296
 			// MEDIO TIEMPO OCASIONAL 	298
 			// HORA CÁTEDRA POR HONORARIOS 	299
-			c.Data["json"] = services.SolicitudTipoVinculacionInfoColaborador(&tipoVinculacion, idTercero, &jsondata, &resultado, &alertas, &alerta, &errorGetAll, &correoInstitucional, &correoElectronico, &correoPersonal, &telefono, &celular, persona)
+			if respuesta := services.SolicitudTipoVinculacionInfoColaborador(&tipoVinculacion, idTercero, &jsondata, &resultado, &alertas, &alerta, &errorGetAll, &correoInstitucional, &correoElectronico, &correoPersonal, &telefono, &celular, persona); respuesta != nil {
+				c.Ctx.Output.SetStatus(404)
+				c.Data["json"] = respuesta
+			}
 		} else {
 			if persona[0]["Message"] == "Not found resource" {
 				c.Data["json"] = nil
 			} else {
+				c.Ctx.Output.SetStatus(404)
 				services.ManejoError(&alerta, &alertas, "No data found", &errorGetAll)
 				c.Data["json"] = map[string]interface{}{"Success": false, "Status": "404", "Message": "Data not found", "Data": nil}
 			}
 		}
 	} else {
+		c.Ctx.Output.SetStatus(404)
 		logs.Error(errPersona)
 		errorGetAll = true
 		c.Data["json"] = map[string]interface{}{"Success": false, "Status": "404", "Message": "Data not found", "Data": nil}
 	}
 
 	if !errorGetAll {
+		c.Ctx.Output.SetStatus(200)
 		c.Data["json"] = map[string]interface{}{"Success": true, "Status": "200", "Message": "Request successful", "Data": resultado}
 	}
 
@@ -333,6 +387,8 @@ func (c *PracticasAcademicasController) ConsultarInfoColaborador() {
 // @Failure 404 not found resource
 // @router /consultar_parametros/ [get]
 func (c *PracticasAcademicasController) ConsultarParametros() {
+	defer errorhandler.HandlePanic(&c.Controller)
+
 	var getProyecto []map[string]interface{}
 	var proyectos []map[string]interface{}
 	var estados []interface{}
@@ -343,21 +399,25 @@ func (c *PracticasAcademicasController) ConsultarParametros() {
 	var tipoSolicitud map[string]interface{}
 
 	if errPeriodo := services.SolicitudPeriodoParametros(&periodos, &resultado); errPeriodo != nil {
+		c.Ctx.Output.SetStatus(404)
 		c.Data["system"] = errPeriodo
 		c.Abort("404")
 	}
 
 	if errProyecto := services.SolicitudProyectoParametros(&getProyecto, &resultado, proyectos); errProyecto != nil {
+		c.Ctx.Output.SetStatus(404)
 		c.Data["system"] = errProyecto
 		c.Abort("404")
 	}
 
 	if errVehiculo := services.SolicitudVehiculoParametros(&vehiculos, &resultado, getProyecto); errVehiculo != nil {
+		c.Ctx.Output.SetStatus(404)
 		c.Data["system"] = errVehiculo
 		c.Abort("404")
 	}
 
 	if errTipoSolicitud := services.SolicitudTipoParametros(&tipoSolicitud, &tipoEstados, &resultado, estados); errTipoSolicitud != nil {
+		c.Ctx.Output.SetStatus(404)
 		c.Data["system"] = errTipoSolicitud
 		c.Abort("404")
 	}
@@ -375,6 +435,8 @@ func (c *PracticasAcademicasController) ConsultarParametros() {
 // @Failure 404 not found resource
 // @router /consultar_espacios_academicos/:id [get]
 func (c *PracticasAcademicasController) ConsultarEspaciosAcademicos() {
+	defer errorhandler.HandlePanic(&c.Controller)
+
 	resultado := []interface{}{}
 	var espaciosAcademicos map[string]interface{}
 	idStr := c.Ctx.Input.Param(":id")
@@ -384,6 +446,7 @@ func (c *PracticasAcademicasController) ConsultarEspaciosAcademicos() {
 		services.AsignarResultadoEspaciosAcademicos(&resultado, espaciosAcademicos)
 	} else {
 		resultado = nil
+		c.Ctx.Output.SetStatus(404)
 		logs.Error(espaciosAcademicos)
 		c.Data["system"] = errEspaciosAcademicos
 		c.Abort("404")
@@ -403,6 +466,7 @@ func (c *PracticasAcademicasController) ConsultarEspaciosAcademicos() {
 // @Failure 400 the request contains incorrect syntaxis
 // @router /enviar_invitacion/ [post]
 func (c *PracticasAcademicasController) EnviarInvitaciones() {
+	defer errorhandler.HandlePanic(&c.Controller)
 
 	var Solicitudes []map[string]interface{}
 	var CorreoPost map[string]interface{}
@@ -414,7 +478,6 @@ func (c *PracticasAcademicasController) EnviarInvitaciones() {
 	if err := json.Unmarshal(c.Ctx.Input.RequestBody, &solicitud); err == nil {
 		id_practica := solicitud["Id"]
 
-		//*********************//
 		errSolicitud := request.GetJson("http://"+beego.AppConfig.String("SolicitudDocenteService")+"solicitante?query=SolicitudId.Id:"+id_practica.(string), &Solicitudes)
 		if errSolicitud == nil {
 			if Solicitudes != nil && fmt.Sprintf("%v", Solicitudes[0]) != "map[]" {
@@ -426,23 +489,26 @@ func (c *PracticasAcademicasController) EnviarInvitaciones() {
 
 				idEstado := fmt.Sprintf("%v", Solicitudes[0]["SolicitudId"].(map[string]interface{})["EstadoTipoSolicitudId"].(map[string]interface{})["Id"].(float64))
 
-				c.Data["json"] = services.ValidarEstadoEnviarInvitaciones(idEstado, ReferenciaJson, &CorreoPost, &errorGetAll, &alertas, &alerta)
-
+				if respuesta := services.ValidarEstadoEnviarInvitaciones(idEstado, ReferenciaJson, &CorreoPost, &errorGetAll, &alertas, &alerta); respuesta != nil {
+					c.Ctx.Output.SetStatus(404)
+					c.Data["json"] = respuesta
+				}
 			} else {
+				c.Ctx.Output.SetStatus(404)
 				errorGetAll = true
 				c.Data["message"] = "Error service GetAll: No data found"
 				c.Abort("404")
 			}
 		} else {
+			c.Ctx.Output.SetStatus(400)
 			errorGetAll = true
 			c.Data["message"] = "Error service GetAll: " + errSolicitud.Error()
 			c.Abort("400")
 		}
-		//*********************//
-
 	}
 
 	if !errorGetAll {
+		c.Ctx.Output.SetStatus(200)
 		alertas = append(alertas, "Correos enviados")
 		alerta.Code = "200"
 		alerta.Type = "OK"
