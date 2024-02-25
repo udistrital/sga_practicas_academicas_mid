@@ -7,8 +7,8 @@ import (
 
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/logs"
-	"github.com/udistrital/sga_mid_practicas_academicas/models"
-	"github.com/udistrital/sga_mid_practicas_academicas/services"
+	"github.com/udistrital/sga_practica_academica_mid/models"
+	"github.com/udistrital/sga_practica_academica_mid/services"
 	"github.com/udistrital/utils_oas/request"
 )
 
