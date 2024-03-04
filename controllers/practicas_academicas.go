@@ -172,7 +172,7 @@ func (c *PracticasAcademicasController) ConsultarEspaciosAcademicos() {
 // @Param	body		body 	models.Practicas_academicas	true		"body for Practicas_academicas content"
 // @Success 201 {object} models.Practicas_academicas
 // @Failure 400 the request contains incorrect syntaxis
-// @router /enviar-invitacion/ [post]
+// @router /invitacion/ [post]
 func (c *PracticasAcademicasController) EnviarInvitaciones() {
 	defer errorhandler.HandlePanic(&c.Controller)
 	dataBody := c.Ctx.Input.RequestBody
