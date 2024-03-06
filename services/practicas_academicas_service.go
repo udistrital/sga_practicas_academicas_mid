@@ -1124,4 +1124,5 @@ func EnviarInvitaciones(data []byte) requestresponse.APIResponse {
 
 	}
 	return requestresponse.APIResponseDTO(true, 200, nil)
+
 }

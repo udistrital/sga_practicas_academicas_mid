@@ -37,6 +37,7 @@ func (c *PracticasAcademicasController) Post() {
 	resultado := services.CrearPracticaAcademica(dataBody)
 	c.Data["json"] = resultado
 	c.Ctx.Output.SetStatus(resultado.Status)
+
 	c.ServeJSON()
 }
 
