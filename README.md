@@ -12,7 +12,7 @@ API MID intermediaria entre el cliente SGA y las APIs de solicitud docente, proy
 
 ### Variables de Entorno
 ```shell
-SGA_MID_PRACTICAS_ACAD_HTTP_PORT: [Puerto de ejecución API]
+SGA_PRACTICAS_ACAD_MID_HTTP_PORT: [Puerto de ejecución API]
 ESPACIOS_ACADEMICO_SERVICE: [Servicio API ESPACIOS_ACADEMICO]
 GOOGLE_MID: [Servicio API GOOGLE_MID]
 PARAMETRO_SERVICE: [Servicio API PARAMETROS]
@@ -35,6 +35,9 @@ git pull origin develop && git checkout develop
 
 # 4. alimentar todas las variables de entorno que utiliza el proyecto.
 SGA_MID_HTTP_PORT=8080 RULER_URL=127.0.0.1:27017 SGA_MID_PRACTICAS_ACAD_SOME_VARIABLE=some_value bee run
+
+# 5. Ejecutar aplicacion en local y generar documentacion swagger
+bee run -downdoc=true -gendoc=true
 ```
 
 ### Ejecución Dockerfile
