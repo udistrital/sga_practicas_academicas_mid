@@ -135,7 +135,27 @@
                 }
             }
         },
-        "/practicas-academicas/enviar-invitacion/": {
+        "/practicas-academicas/espacios-academicos/{id}": {
+            "get": {
+                "tags": [
+                    "practicas-academicas"
+                ],
+                "description": "get estados de practica academica",
+                "operationId": "PracticasAcademicasController.ConsultarEspaciosAcademicos",
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/models.Practicas_academicas"
+                        }
+                    },
+                    "404": {
+                        "description": "not found resource"
+                    }
+                }
+            }
+        },
+        "/practicas-academicas/invitacion/": {
             "post": {
                 "tags": [
                     "practicas-academicas"
@@ -162,26 +182,6 @@
                     },
                     "400": {
                         "description": "the request contains incorrect syntaxis"
-                    }
-                }
-            }
-        },
-        "/practicas-academicas/espacios-academicos/{id}": {
-            "get": {
-                "tags": [
-                    "practicas-academicas"
-                ],
-                "description": "get estados de practica academica",
-                "operationId": "PracticasAcademicasController.ConsultarEspaciosAcademicos",
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "schema": {
-                            "$ref": "#/definitions/models.Practicas_academicas"
-                        }
-                    },
-                    "404": {
-                        "description": "not found resource"
                     }
                 }
             }
