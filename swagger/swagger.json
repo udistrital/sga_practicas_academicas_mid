@@ -105,7 +105,7 @@
                 }
             }
         },
-        "/practicas_academicas/consultar_colaborador/{id}": {
+        "/practicas_academicas/colaboradores/{id}": {
             "get": {
                 "tags": [
                     "practicas_academicas"
@@ -135,7 +135,7 @@
                 }
             }
         },
-        "/practicas_academicas/consultar_espacios_academicos/{id}": {
+        "/practicas_academicas/espacios-academicos/{id}": {
             "get": {
                 "tags": [
                     "practicas_academicas"
@@ -155,57 +155,7 @@
                 }
             }
         },
-        "/practicas_academicas/consultar_parametros/": {
-            "get": {
-                "tags": [
-                    "practicas_academicas"
-                ],
-                "description": "get parametros para creación de practica academica",
-                "operationId": "PracticasAcademicasController.ConsultarParametros",
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "schema": {
-                            "$ref": "#/definitions/models.Practicas_academicas"
-                        }
-                    },
-                    "404": {
-                        "description": "not found resource"
-                    }
-                }
-            }
-        },
-        "/practicas_academicas/consultar_solicitante/{id}": {
-            "get": {
-                "tags": [
-                    "practicas_academicas"
-                ],
-                "description": "get información del docente solicitante de la practica academica",
-                "operationId": "PracticasAcademicasController.ConsultarInfoSolicitante",
-                "parameters": [
-                    {
-                        "in": "id",
-                        "name": "id",
-                        "description": "terceros",
-                        "schema": {
-                            "$ref": "#/definitions/perteneciente"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "schema": {
-                            "$ref": "#/definitions/models.Practicas_academicas"
-                        }
-                    },
-                    "404": {
-                        "description": "not found resource"
-                    }
-                }
-            }
-        },
-        "/practicas_academicas/enviar_invitacion/": {
+        "/practicas_academicas/invitacion/": {
             "post": {
                 "tags": [
                     "practicas_academicas"
@@ -232,6 +182,56 @@
                     },
                     "400": {
                         "description": "the request contains incorrect syntaxis"
+                    }
+                }
+            }
+        },
+        "/practicas_academicas/parametros/": {
+            "get": {
+                "tags": [
+                    "practicas_academicas"
+                ],
+                "description": "get parametros para creación de practica academica",
+                "operationId": "PracticasAcademicasController.ConsultarParametros",
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/models.Practicas_academicas"
+                        }
+                    },
+                    "404": {
+                        "description": "not found resource"
+                    }
+                }
+            }
+        },
+        "/practicas_academicas/solicitantes/{id}": {
+            "get": {
+                "tags": [
+                    "practicas_academicas"
+                ],
+                "description": "get información del docente solicitante de la practica academica",
+                "operationId": "PracticasAcademicasController.ConsultarInfoSolicitante",
+                "parameters": [
+                    {
+                        "in": "id",
+                        "name": "id",
+                        "description": "terceros",
+                        "schema": {
+                            "$ref": "#/definitions/perteneciente"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "$ref": "#/definitions/models.Practicas_academicas"
+                        }
+                    },
+                    "404": {
+                        "description": "not found resource"
                     }
                 }
             }
