@@ -1,7 +1,7 @@
 lastupdate.tmp
 .vscode/
 .idea/
-sga_mid
+sga_practicas_academicas_mid
 main
 .scannerwork/
 swagger/*.png
@@ -15,6 +15,6 @@ swagger/fonts/
 swagger/images/
 swagger/lang/
 swagger/lib/
-sga_mid.exe
+sga_mid_practicas_academicas.exe
 go.mod
 go.sum

@@ -267,8 +267,7 @@ func GetAllPracticasAcademicas(query string, fields string) requestresponse.APIR
 	var message interface{} = ""
 	var statusCode int = 200
 	wge := new(errgroup.Group)
-var mutex sync.Mutex // Mutex para proteger el acceso a resultados
-
+	var mutex sync.Mutex // Mutex para proteger el acceso a resultados
 
 	fmt.Println("Antes de la solicitud")
 	errSolicitud := request.GetJson("http://"+beego.AppConfig.String("SolicitudDocenteService")+"solicitante?limit=0"+query+"&fields=SolicitudId", &Solicitudes)
@@ -280,11 +279,11 @@ var mutex sync.Mutex // Mutex para proteger el acceso a resultados
 			wge.SetLimit(10)
 			for _, solicitud := range Solicitudes {
 				solicitud := solicitud
-				wge.Go(func () error{
+				wge.Go(func() error {
 					var TipoEstado map[string]interface{}
 					errTipoEstado := request.GetJson("http://"+beego.AppConfig.String("SolicitudDocenteService")+"estado_tipo_solicitud?query=Id:"+fmt.Sprintf("%v", solicitud["SolicitudId"].(map[string]interface{})["EstadoTipoSolicitudId"].(map[string]interface{})["Id"]), &TipoEstado)
-	
-					if errTipoEstado == nil && fmt.Sprintf("%v",TipoEstado) != "map[]" {
+
+					if errTipoEstado == nil && fmt.Sprintf("%v", TipoEstado) != "map[]" {
 						fmt.Println("Opcion 3")
 						auxResultado := map[string]interface{}{
 							"Id":                    solicitud["SolicitudId"].(map[string]interface{})["Id"],

@@ -15,10 +15,10 @@
     },
     "basePath": "/v1",
     "paths": {
-        "/practicas_academicas/": {
+        "/practicas-academicas/": {
             "get": {
                 "tags": [
-                    "practicas_academicas"
+                    "practicas-academicas"
                 ],
                 "description": "get Practicas_academicas",
                 "operationId": "PracticasAcademicasController.GetAll",
@@ -77,7 +77,7 @@
             },
             "post": {
                 "tags": [
-                    "practicas_academicas"
+                    "practicas-academicas"
                 ],
                 "description": "create Practicas_academicas",
                 "operationId": "PracticasAcademicasController.Create",
@@ -105,10 +105,10 @@
                 }
             }
         },
-        "/practicas_academicas/colaboradores/{id}": {
+        "/practicas-academicas/colaboradores/{id}": {
             "get": {
                 "tags": [
-                    "practicas_academicas"
+                    "practicas-academicas"
                 ],
                 "description": "get información del docente colaborador",
                 "operationId": "PracticasAcademicasController.ConsultarInfoColaborador",
@@ -135,10 +135,10 @@
                 }
             }
         },
-        "/practicas_academicas/espacios-academicos/{id}": {
+        "/practicas-academicas/espacios-academicos/{id}": {
             "get": {
                 "tags": [
-                    "practicas_academicas"
+                    "practicas-academicas"
                 ],
                 "description": "get estados de practica academica",
                 "operationId": "PracticasAcademicasController.ConsultarEspaciosAcademicos",
@@ -155,10 +155,10 @@
                 }
             }
         },
-        "/practicas_academicas/invitacion/": {
+        "/practicas-academicas/invitacion/": {
             "post": {
                 "tags": [
-                    "practicas_academicas"
+                    "practicas-academicas"
                 ],
                 "description": "enviar invitaciones al correo de los estudiantes",
                 "operationId": "PracticasAcademicasController.EnviarInvitaciones",
@@ -186,10 +186,10 @@
                 }
             }
         },
-        "/practicas_academicas/parametros/": {
+        "/practicas-academicas/parametros/": {
             "get": {
                 "tags": [
-                    "practicas_academicas"
+                    "practicas-academicas"
                 ],
                 "description": "get parametros para creación de practica academica",
                 "operationId": "PracticasAcademicasController.ConsultarParametros",
@@ -206,10 +206,10 @@
                 }
             }
         },
-        "/practicas_academicas/solicitantes/{id}": {
+        "/practicas-academicas/solicitantes/{id}": {
             "get": {
                 "tags": [
-                    "practicas_academicas"
+                    "practicas-academicas"
                 ],
                 "description": "get información del docente solicitante de la practica academica",
                 "operationId": "PracticasAcademicasController.ConsultarInfoSolicitante",
@@ -236,10 +236,10 @@
                 }
             }
         },
-        "/practicas_academicas/{id}": {
+        "/practicas-academicas/{id}": {
             "get": {
                 "tags": [
-                    "practicas_academicas"
+                    "practicas-academicas"
                 ],
                 "description": "get Practicas_academicas by id",
                 "operationId": "PracticasAcademicasController.GetOne",
@@ -266,7 +266,7 @@
             },
             "put": {
                 "tags": [
-                    "practicas_academicas"
+                    "practicas-academicas"
                 ],
                 "description": "update the Practicas_academicas",
                 "operationId": "PracticasAcademicasController.Put",
@@ -318,7 +318,7 @@
     },
     "tags": [
         {
-            "name": "practicas_academicas",
+            "name": "practicas-academicas",
             "description": "PracticasAcademicasController operations for Practicas_academicas\n"
         }
     ]
