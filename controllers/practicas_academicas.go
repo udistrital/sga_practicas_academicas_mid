@@ -1,9 +1,9 @@
 package controllers
 
 import (
-	"github.com/astaxie/beego"
-	"github.com/udistrital/sga_mid_practicas_academicas/services"
 	"github.com/udistrital/utils_oas/errorhandler"
+	"github.com/astaxie/beego"
+	"github.com/udistrital/sga_practica_academica_mid/services"
 )
 
 // PracticasAcademicasController operations for Practicas_academicas
