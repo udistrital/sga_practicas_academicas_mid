@@ -5,13 +5,15 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/logs"
-	"github.com/udistrital/sga_mid_practicas_academicas/models"
+	"github.com/udistrital/sga_practicas_academicas_mid/models"
 	"github.com/udistrital/utils_oas/request"
 	"github.com/udistrital/utils_oas/requestresponse"
 	"github.com/udistrital/utils_oas/time_bogota"
+	"golang.org/x/sync/errgroup"
 )
 
 func CrearPracticaAcademica(data []byte) requestresponse.APIResponse {
@@ -260,41 +262,64 @@ func GetPracticaAcademica(id_practica string) requestresponse.APIResponse {
 
 func GetAllPracticasAcademicas(query string, fields string) requestresponse.APIResponse {
 	var Solicitudes []map[string]interface{}
-	var TipoEstado map[string]interface{}
 	resultado := []interface{}{}
 	var success bool = true
 	var message interface{} = ""
 	var statusCode int = 200
+	wge := new(errgroup.Group)
+	var mutex sync.Mutex // Mutex para proteger el acceso a resultados
 
+	fmt.Println("Antes de la solicitud")
 	errSolicitud := request.GetJson("http://"+beego.AppConfig.String("SolicitudDocenteService")+"solicitante?limit=0"+query+"&fields=SolicitudId", &Solicitudes)
-
+	fmt.Println("Despues de la solicitud")
 	if errSolicitud == nil {
-		if Solicitudes != nil && fmt.Sprintf("%v", Solicitudes[0]) != "map[]" {
+		fmt.Println("Opcion 1")
+		if Solicitudes != nil && fmt.Sprintf("%v", Solicitudes[0]) != "[map[]]" {
+			fmt.Println("Opcion 2")
+			wge.SetLimit(10)
 			for _, solicitud := range Solicitudes {
-				errTipoEstado := request.GetJson("http://"+beego.AppConfig.String("SolicitudDocenteService")+"estado_tipo_solicitud?query=Id:"+fmt.Sprintf("%v", solicitud["SolicitudId"].(map[string]interface{})["EstadoTipoSolicitudId"].(map[string]interface{})["Id"]), &TipoEstado)
+				solicitud := solicitud
+				wge.Go(func() error {
+					var TipoEstado map[string]interface{}
+					errTipoEstado := request.GetJson("http://"+beego.AppConfig.String("SolicitudDocenteService")+"estado_tipo_solicitud?query=Id:"+fmt.Sprintf("%v", solicitud["SolicitudId"].(map[string]interface{})["EstadoTipoSolicitudId"].(map[string]interface{})["Id"]), &TipoEstado)
 
-				if errTipoEstado == nil {
-					resultado = append(resultado, map[string]interface{}{
-						"Id":                    solicitud["SolicitudId"].(map[string]interface{})["Id"],
-						"FechaRadicacion":       solicitud["SolicitudId"].(map[string]interface{})["FechaRadicacion"],
-						"EstadoTipoSolicitudId": TipoEstado["Data"].([]interface{})[0],
-					})
-				}
+					if errTipoEstado == nil && fmt.Sprintf("%v", TipoEstado) != "map[]" {
+						fmt.Println("Opcion 3")
+						auxResultado := map[string]interface{}{
+							"Id":                    solicitud["SolicitudId"].(map[string]interface{})["Id"],
+							"FechaRadicacion":       solicitud["SolicitudId"].(map[string]interface{})["FechaRadicacion"],
+							"EstadoTipoSolicitudId": TipoEstado["Data"].([]interface{})[0],
+						}
+						mutex.Lock()
+						resultado = append(resultado, auxResultado)
+						mutex.Unlock()
+					}
+					return nil
+				})
 			}
+			//Si existe error, se realiza
+			if err := wge.Wait(); err != nil {
+				return requestresponse.APIResponseDTO(false, 400, err)
+			}
+
 		} else {
+			fmt.Println("Opcion 4")
 			success = false
 			statusCode = 404
 			message = "Error service GetAll: No data founError service GetAll: No data found"
 		}
 	} else {
+		fmt.Println("Opcion 5")
 		success = false
 		statusCode = 400
 		message = errSolicitud.Error()
 	}
 
 	if success {
+		fmt.Println("Opcion 6")
 		return requestresponse.APIResponseDTO(success, statusCode, resultado)
 	} else {
+		fmt.Println("Opcion 7")
 		return requestresponse.APIResponseDTO(success, statusCode, nil, message)
 	}
 }
